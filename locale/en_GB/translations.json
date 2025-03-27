@@ -1450,7 +1450,7 @@
   "There are no messages in this topic.": "There are no messages in this topic.",
   "There are no messages in your combined feed.": "There are no messages in your combined feed.",
   "There are no messages to move.": "There are no messages to move.",
-  "There are no unread messages in your inbox.": "There are no unread messages in your inbox.",
+  "There are no unread messages in your inbox.": "∄𝑚 ∈ 𝑀: 𝑚 ∈ 𝐼 ∧ IsUnread(𝑚) ≣ T",
   "There are no user groups you can view in this organization.": "There are no user groups you can view in this organization.",
   "There is a default emoji with this name. Do you want to override it with a custom emoji? The name <code>:{emoji_name}:</code> will no longer work to access the default emoji.": "There is a default emoji with this name. Do you want to override it with a custom emoji? The name <code>:{emoji_name}:</code> will no longer work to access the default emoji.",
   "There was an error updating the setting.": "There was an error updating the setting.",
