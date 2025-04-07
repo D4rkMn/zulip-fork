@@ -249,6 +249,7 @@ from zerver.views.video_calls import (
 )
 from zerver.views.zephyr import webathena_kerberos_login
 from zproject import dev_urls
+from zerver.topic_popover_details import get_topic_details
 
 if settings.TWO_FACTOR_AUTHENTICATION_ENABLED:  # nocoverage
     from two_factor.gateways.twilio.urls import urlpatterns as tf_twilio_urls
@@ -512,6 +513,7 @@ v1_api_and_json_patterns = [
     rest_path(
         "default_stream_groups/<int:group_id>/streams", PATCH=update_default_stream_group_streams
     ),
+    rest_path("topic/popover-details/<int:stream_id>/<int:user_id>", GET=get_topic_details),
     # GET lists your streams, POST bulk adds, PATCH bulk modifies/removes
     rest_path(
         "users/me/subscriptions",

@@ -12,6 +12,7 @@ import render_left_sidebar_stream_actions_popover from "../templates/popovers/le
 import * as blueslip from "./blueslip.ts";
 import type {Typeahead} from "./bootstrap_typeahead.ts";
 import * as browser_history from "./browser_history.ts";
+import * as channel from "./channel.ts";
 import * as clipboard_handler from "./clipboard_handler.ts";
 import * as compose_banner from "./compose_banner.ts";
 import * as composebox_typeahead from "./composebox_typeahead.ts";
@@ -25,11 +26,12 @@ import type {Message} from "./message_store.ts";
 import * as message_util from "./message_util.ts";
 import * as message_view from "./message_view.ts";
 import * as narrow_state from "./narrow_state.ts";
+import * as peer_data from "./peer_data.ts";
 import * as popover_menus from "./popover_menus.ts";
 import {left_sidebar_tippy_options} from "./popover_menus.ts";
 import {web_channel_default_view_values} from "./settings_config.ts";
 import * as settings_data from "./settings_data.ts";
-import {realm} from "./state_data.ts";
+import {current_user, realm} from "./state_data.ts";
 import * as stream_data from "./stream_data.ts";
 import * as stream_settings_api from "./stream_settings_api.ts";
 import * as stream_settings_components from "./stream_settings_components.ts";
@@ -93,6 +95,37 @@ function stream_popover_sub(
     return sub;
 }
 
+function fetch_popover_details(
+    stream_id: number,
+    user_id: number,
+    callback: (topics: { name: string, followed: boolean }[]) => void
+): void {
+    const url = `json/topic/popover-details/${stream_id}/${user_id}`;
+
+    const TopicSchema = z.object({
+        name: z.string(),
+        followed: z.boolean(),
+    });
+
+    const ResponseSchema = z.object({
+        result: z.literal("success"),
+        msg: z.string(),
+        data: z.array(TopicSchema),
+    });
+
+    channel.get({
+        url,
+        success(raw_data) {
+            const parsed = ResponseSchema.parse(raw_data);
+            callback(parsed.data);
+        },
+        error(_) {
+            callback([]);
+        }
+    });
+}
+
+
 function build_stream_popover(opts: {elt: HTMLElement; stream_id: number}): void {
     const {elt, stream_id} = opts;
 
@@ -109,14 +142,10 @@ function build_stream_popover(opts: {elt: HTMLElement; stream_id: number}): void
     const stream_unread = unread.unread_count_info_for_stream(stream_id);
     const stream_unread_count = stream_unread.unmuted_count + stream_unread.muted_count;
     const has_unread_messages = stream_unread_count > 0;
-    const content = render_left_sidebar_stream_actions_popover({
-        stream: {
-            ...sub_store.get(stream_id),
-            url: browser_history.get_full_url(stream_hash),
-        },
-        has_unread_messages,
-        show_go_to_channel_feed,
-    });
+    
+    const num_users = peer_data.get_subscriber_count(stream_id, false);
+    const user_id = current_user.user_id;
+    let content: string;
 
     popover_menus.toggle_popover_menu(elt, {
         // Add a delay to separate `hideOnClick` and `onShow` so that
@@ -127,7 +156,22 @@ function build_stream_popover(opts: {elt: HTMLElement; stream_id: number}): void
         onCreate(instance) {
             const $popover = $(instance.popper);
             $popover.addClass("stream-popover-root");
-            instance.setContent(ui_util.parse_html(content));
+            // Only render when the details have been fetched
+            fetch_popover_details(stream_id, user_id, topics => {
+                const followed_count = topics.filter(topic => topic.followed).length;
+                content = render_left_sidebar_stream_actions_popover({
+                    stream: {
+                        ...sub_store.get(stream_id),
+                        url: browser_history.get_full_url(stream_hash),
+                        user_count: num_users,
+                        topic_count: topics.length.toString(),
+                        followed_topics_count: followed_count.toString(),
+                    },
+                    has_unread_messages,
+                    show_go_to_channel_feed,
+                })
+                instance.setContent(ui_util.parse_html(content));
+            });
         },
         onMount(instance) {
             const $popper = $(instance.popper);

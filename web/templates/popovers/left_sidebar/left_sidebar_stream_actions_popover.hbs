@@ -9,6 +9,16 @@
             <span class="popover-stream-name">{{stream.name}}</span>
         </li>
         <li role="separator" class="popover-menu-separator"></li>
+        <li role="none" class="link-item popover-menu-list-item hidden-for-spectators">
+            <a role="menuitem" class="mark_stream_as_read popover-menu-link" tabindex="0">
+                <span class="popover-menu-label"><b>{{stream.user_count}} {{t " subscribed users"}}</b></span>
+            </a>
+        </li>
+        <li role="none" class="link-item popover-menu-list-item hidden-for-spectators">
+            <a role="menuitem" class="mark_stream_as_read popover-menu-link" tabindex="0">
+                <span class="popover-menu-label"><b>{{stream.topic_count}} {{t "topics ("}}{{stream.followed_topics_count}} {{t "followed)"}}</b></span>
+            </a>
+        </li>
         {{#if has_unread_messages}}
         <li role="none" class="link-item popover-menu-list-item hidden-for-spectators">
             <a role="menuitem" class="mark_stream_as_read popover-menu-link" tabindex="0">
